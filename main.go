@@ -26,7 +26,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	s := "Hello, World!"
+	s := titleStyle.Render("Hello, World!")
 
 	return s
 }
@@ -34,7 +34,7 @@ func (m Model) View() string {
 func main() {
 	p := tea.NewProgram(Model{}, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
-		fmt.Println("There was an error while instantiating the program : ", err)
+		fmt.Println(errorStyle.Render("There was an error while instantiating the program : " + err.Error()))
 		os.Exit(1)
 	}
 }
