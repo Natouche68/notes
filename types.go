@@ -7,6 +7,7 @@ import (
 type Model struct {
 	notes          []Note
 	currentState   string
+	currentNote    int
 	selectNoteForm *huh.Form
 }
 

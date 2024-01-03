@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"time"
 
@@ -39,6 +40,7 @@ func newModel() Model {
 	return Model{
 		notes:        notes,
 		currentState: "home",
+		currentNote:  -1,
 		selectNoteForm: huh.NewForm(
 			huh.NewGroup(
 				huh.NewSelect[string]().
@@ -63,28 +65,40 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	cmds := []tea.Cmd{}
+
 	if m.currentState == "home" {
 		form, cmd := m.selectNoteForm.Update(msg)
 		if f, ok := form.(*huh.Form); ok {
 			m.selectNoteForm = f
 		}
 
-		return m, cmd
+		cmds = append(cmds, cmd)
+
+		if m.selectNoteForm.State == huh.StateCompleted {
+			if m.selectNoteForm.GetString("note") == "Create a new note" {
+				m.currentState = "create"
+			} else {
+				m.currentState = "note"
+
+				m.currentNote = slices.IndexFunc(m.notes, func(note Note) bool {
+					return note.title == m.selectNoteForm.GetString("note")
+				})
+			}
+		}
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
 	s := ""
 
 	if m.currentState == "home" {
-		s += titleStyle.Render("Notes")
+		title := titleStyle.Render("Notes")
 
-		if m.selectNoteForm.State == huh.StateCompleted {
-			s = lipgloss.JoinVertical(lipgloss.Left, m.selectNoteForm.GetString("note"))
-		} else {
-			s = lipgloss.JoinVertical(lipgloss.Left, s, m.selectNoteForm.View())
+		if m.selectNoteForm.State == huh.StateNormal {
+			s = lipgloss.JoinVertical(lipgloss.Left, title, m.selectNoteForm.View())
 		}
 	}
 
