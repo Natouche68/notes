@@ -5,11 +5,12 @@ import (
 )
 
 type Model struct {
-	notes          []Note
-	currentState   string
-	currentNote    int
-	selectNoteForm *huh.Form
-	createNoteForm *huh.Form
+	notes           []Note
+	currentState    string
+	currentNote     int
+	selectNoteForm  *huh.Form
+	createNoteForm  *huh.Form
+	editingNoteForm *huh.Form
 }
 
 type Note struct {
@@ -20,3 +21,4 @@ type Note struct {
 
 type OpenedNoteMsg int
 type CreatingFormMsg *huh.Form
+type EditingFormMsg *huh.Form

@@ -70,13 +70,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case OpenedNoteMsg:
-		m.currentState = "note"
 		m.currentNote = int(msg)
+		cmds = append(cmds, initNoteForm(m))
 
 	case CreatingFormMsg:
 		m.currentState = "create"
 		m.createNoteForm = msg
 		cmds = append(cmds, m.createNoteForm.Init())
+
+	case EditingFormMsg:
+		m.currentState = "note"
+		m.editingNoteForm = msg
+		cmds = append(cmds, m.editingNoteForm.Init())
 	}
 
 	if m.currentState == "home" {
@@ -94,6 +99,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, openNote(m.notes, m.selectNoteForm.GetString("note")))
 			}
 		}
+	} else if m.currentState == "note" {
+		form, cmd := m.editingNoteForm.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.selectNoteForm = f
+		}
+
+		cmds = append(cmds, cmd)
 	} else if m.currentState == "create" {
 		form, cmd := m.createNoteForm.Update(msg)
 		if f, ok := form.(*huh.Form); ok {
@@ -109,7 +121,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				content:    "",
 				lastEdited: time.Now().Unix(),
 			})
-			m.currentState = "note"
+
+			cmds = append(cmds, initNoteForm(m))
 		}
 	}
 
@@ -126,7 +139,7 @@ func (m Model) View() string {
 			s = lipgloss.JoinVertical(lipgloss.Left, title, m.selectNoteForm.View())
 		}
 	} else if m.currentState == "note" {
-		s = m.notes[m.currentNote].content
+		s = m.editingNoteForm.View()
 	} else if m.currentState == "create" {
 		s = m.createNoteForm.View()
 	}

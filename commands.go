@@ -41,3 +41,16 @@ func createNote(notes []Note) tea.Cmd {
 		).WithTheme(huh.ThemeBase16()))
 	}
 }
+
+func initNoteForm(m Model) tea.Cmd {
+	return func() tea.Msg {
+		return EditingFormMsg(huh.NewForm(
+			huh.NewGroup(
+				huh.NewText().
+					Key("content").
+					Title(m.notes[m.currentNote].title).
+					Value(&m.notes[m.currentNote].content),
+			),
+		).WithTheme(huh.ThemeBase16()))
+	}
+}
