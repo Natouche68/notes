@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"slices"
 	"sort"
 	"time"
 
@@ -40,7 +39,6 @@ func newModel() Model {
 	return Model{
 		notes:        notes,
 		currentState: "home",
-		currentNote:  -1,
 		selectNoteForm: huh.NewForm(
 			huh.NewGroup(
 				huh.NewSelect[string]().
@@ -57,15 +55,29 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
-		}
-	}
 
-	cmds := []tea.Cmd{}
+		case "q":
+			if m.currentState == "home" {
+				return m, tea.Quit
+			}
+		}
+
+	case OpenedNoteMsg:
+		m.currentState = "note"
+		m.currentNote = int(msg)
+
+	case CreatingFormMsg:
+		m.currentState = "create"
+		m.createNoteForm = msg
+		cmds = append(cmds, m.createNoteForm.Init())
+	}
 
 	if m.currentState == "home" {
 		form, cmd := m.selectNoteForm.Update(msg)
@@ -77,14 +89,27 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.selectNoteForm.State == huh.StateCompleted {
 			if m.selectNoteForm.GetString("note") == "Create a new note" {
-				m.currentState = "create"
+				cmds = append(cmds, createNote)
 			} else {
-				m.currentState = "note"
-
-				m.currentNote = slices.IndexFunc(m.notes, func(note Note) bool {
-					return note.title == m.selectNoteForm.GetString("note")
-				})
+				cmds = append(cmds, openNote(m.notes, m.selectNoteForm.GetString("note")))
 			}
+		}
+	} else if m.currentState == "create" {
+		form, cmd := m.createNoteForm.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.selectNoteForm = f
+		}
+
+		cmds = append(cmds, cmd)
+
+		if m.createNoteForm.State == huh.StateCompleted {
+			m.currentNote = len(m.notes)
+			m.notes = append(m.notes, Note{
+				title:      m.createNoteForm.GetString("title"),
+				content:    "",
+				lastEdited: time.Now().Unix(),
+			})
+			m.currentState = "note"
 		}
 	}
 
@@ -100,6 +125,10 @@ func (m Model) View() string {
 		if m.selectNoteForm.State == huh.StateNormal {
 			s = lipgloss.JoinVertical(lipgloss.Left, title, m.selectNoteForm.View())
 		}
+	} else if m.currentState == "note" {
+		s = m.notes[m.currentNote].content
+	} else if m.currentState == "create" {
+		s = m.createNoteForm.View()
 	}
 
 	return s

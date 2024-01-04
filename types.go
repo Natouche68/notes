@@ -9,6 +9,7 @@ type Model struct {
 	currentState   string
 	currentNote    int
 	selectNoteForm *huh.Form
+	createNoteForm *huh.Form
 }
 
 type Note struct {
@@ -16,3 +17,6 @@ type Note struct {
 	content    string
 	lastEdited int64
 }
+
+type OpenedNoteMsg int
+type CreatingFormMsg *huh.Form
