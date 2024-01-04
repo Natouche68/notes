@@ -55,7 +55,7 @@ func initNoteForm(m Model) tea.Cmd {
 					Key("content").
 					Title(m.notes[m.currentNote].title).
 					Value(&m.notes[m.currentNote].content).
-					Lines(height - 4).
+					Lines(height - 6).
 					CharLimit(3200),
 			),
 		).WithShowHelp(false).WithTheme(huh.ThemeBase16()).WithKeyMap(&huh.KeyMap{

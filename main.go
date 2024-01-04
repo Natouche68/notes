@@ -81,6 +81,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case EditingFormMsg:
 		m.currentState = "note"
 		m.editingNoteForm = msg
+		m.createNoteForm = nil
+		m.selectNoteForm = nil
 		cmds = append(cmds, m.editingNoteForm.Init())
 	}
 
@@ -139,7 +141,9 @@ func (m Model) View() string {
 			s = lipgloss.JoinVertical(lipgloss.Left, title, m.selectNoteForm.View())
 		}
 	} else if m.currentState == "note" {
-		s = m.editingNoteForm.View()
+		editingForm := m.editingNoteForm.View()
+		help := helpStyle.Render("crtl+c - quit • esc - go home")
+		s = lipgloss.JoinVertical(lipgloss.Left, editingForm, help)
 	} else if m.currentState == "create" {
 		s = m.createNoteForm.View()
 	}

@@ -5,7 +5,9 @@ import (
 )
 
 var (
-	titleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("4")).Bold(true).MarginBottom(1)
+	titleStyle = lipgloss.NewStyle().Background(lipgloss.Color("4")).Bold(true).MarginBottom(1).Padding(0, 1)
 
 	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true).Margin(1, 4)
+
+	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Italic(true)
 )
