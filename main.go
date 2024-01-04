@@ -46,7 +46,7 @@ func newModel() Model {
 					Title("Select a note or create a new one").
 					Options(huh.NewOptions(notesTitles...)...),
 			),
-		).WithTheme(huh.ThemeBase16()),
+		).WithShowHelp(false).WithTheme(huh.ThemeBase16()),
 	}
 }
 

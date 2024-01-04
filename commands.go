@@ -2,11 +2,13 @@ package main
 
 import (
 	"errors"
+	"os"
 	"slices"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"golang.org/x/term"
 )
 
 func openNote(notes []Note, noteToOpen string) tea.Cmd {
@@ -39,23 +41,27 @@ func createNote(notes []Note) tea.Cmd {
 						return nil
 					}),
 			),
-		).WithTheme(huh.ThemeBase16()))
+		).WithShowHelp(false).WithTheme(huh.ThemeBase16()))
 	}
 }
 
 func initNoteForm(m Model) tea.Cmd {
+	width, height, _ := term.GetSize(int(os.Stdout.Fd()))
+
 	return func() tea.Msg {
 		return EditingFormMsg(huh.NewForm(
 			huh.NewGroup(
 				huh.NewText().
 					Key("content").
 					Title(m.notes[m.currentNote].title).
-					Value(&m.notes[m.currentNote].content),
+					Value(&m.notes[m.currentNote].content).
+					Lines(height - 4).
+					CharLimit(3200),
 			),
-		).WithTheme(huh.ThemeBase16()).WithKeyMap(&huh.KeyMap{
+		).WithShowHelp(false).WithTheme(huh.ThemeBase16()).WithKeyMap(&huh.KeyMap{
 			Text: huh.TextKeyMap{
 				NewLine: key.NewBinding(key.WithKeys("enter")),
 			},
-		}))
+		}).WithWidth(width - 1))
 	}
 }
