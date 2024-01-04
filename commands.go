@@ -4,6 +4,7 @@ import (
 	"errors"
 	"slices"
 
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 )
@@ -51,6 +52,10 @@ func initNoteForm(m Model) tea.Cmd {
 					Title(m.notes[m.currentNote].title).
 					Value(&m.notes[m.currentNote].content),
 			),
-		).WithTheme(huh.ThemeBase16()))
+		).WithTheme(huh.ThemeBase16()).WithKeyMap(&huh.KeyMap{
+			Text: huh.TextKeyMap{
+				NewLine: key.NewBinding(key.WithKeys("enter")),
+			},
+		}))
 	}
 }
