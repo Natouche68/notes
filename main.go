@@ -89,7 +89,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if m.selectNoteForm.State == huh.StateCompleted {
 			if m.selectNoteForm.GetString("note") == "Create a new note" {
-				cmds = append(cmds, createNote)
+				cmds = append(cmds, createNote(m.notes))
 			} else {
 				cmds = append(cmds, openNote(m.notes, m.selectNoteForm.GetString("note")))
 			}

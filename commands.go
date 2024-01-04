@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"slices"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -17,13 +18,26 @@ func openNote(notes []Note, noteToOpen string) tea.Cmd {
 	}
 }
 
-func createNote() tea.Msg {
-	return CreatingFormMsg(huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title("Create a new note").
-				Placeholder("Title").
-				Key("title"),
-		),
-	).WithTheme(huh.ThemeBase16()))
+func createNote(notes []Note) tea.Cmd {
+	return func() tea.Msg {
+		return CreatingFormMsg(huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().
+					Key("title").
+					Title("Create a new note").
+					Placeholder("Title").
+					Validate(func(s string) error {
+						if s == "" {
+							return errors.New("Title cannot be empty")
+						}
+						for _, note := range notes {
+							if s == note.title {
+								return errors.New("Title already exists")
+							}
+						}
+						return nil
+					}),
+			),
+		).WithTheme(huh.ThemeBase16()))
+	}
 }
