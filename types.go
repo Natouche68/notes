@@ -22,3 +22,4 @@ type Note struct {
 type OpenedNoteMsg int
 type CreatingFormMsg *huh.Form
 type EditingFormMsg *huh.Form
+type NoteSavedMsg Model

@@ -4,12 +4,36 @@ import (
 	"errors"
 	"os"
 	"slices"
+	"sort"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"golang.org/x/term"
 )
+
+func homeForm(notes []Note) *huh.Form {
+	sort.Slice(notes, func(i, j int) bool {
+		return notes[i].lastEdited > notes[j].lastEdited
+	})
+
+	notesTitles := []string{
+		"Create a new note",
+	}
+	for _, note := range notes {
+		notesTitles = append(notesTitles, note.title)
+	}
+
+	return huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Key("note").
+				Title("Select a note or create a new one").
+				Options(huh.NewOptions(notesTitles...)...),
+		),
+	).WithShowHelp(false).WithTheme(huh.ThemeBase16())
+}
 
 func openNote(notes []Note, noteToOpen string) tea.Cmd {
 	return func() tea.Msg {
@@ -63,5 +87,12 @@ func initNoteForm(m Model) tea.Cmd {
 				NewLine: key.NewBinding(key.WithKeys("enter")),
 			},
 		}).WithWidth(width - 1))
+	}
+}
+
+func saveNote(m Model) tea.Cmd {
+	return func() tea.Msg {
+		m.notes[m.currentNote].lastEdited = time.Now().Unix()
+		return NoteSavedMsg(m)
 	}
 }

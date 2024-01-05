@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -25,28 +24,10 @@ func newModel() Model {
 		},
 	}
 
-	sort.Slice(notes, func(i, j int) bool {
-		return notes[i].lastEdited > notes[j].lastEdited
-	})
-
-	notesTitles := []string{
-		"Create a new note",
-	}
-	for _, note := range notes {
-		notesTitles = append(notesTitles, note.title)
-	}
-
 	return Model{
-		notes:        notes,
-		currentState: "home",
-		selectNoteForm: huh.NewForm(
-			huh.NewGroup(
-				huh.NewSelect[string]().
-					Key("note").
-					Title("Select a note or create a new one").
-					Options(huh.NewOptions(notesTitles...)...),
-			),
-		).WithShowHelp(false).WithTheme(huh.ThemeBase16()),
+		notes:          notes,
+		currentState:   "home",
+		selectNoteForm: homeForm(notes),
 	}
 }
 
@@ -67,6 +48,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.currentState == "home" {
 				return m, tea.Quit
 			}
+
+		case "esc":
+			cmds = append(cmds, saveNote(m))
 		}
 
 	case OpenedNoteMsg:
@@ -84,6 +68,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.createNoteForm = nil
 		m.selectNoteForm = nil
 		cmds = append(cmds, m.editingNoteForm.Init())
+
+	case NoteSavedMsg:
+		m.currentState = "home"
+		m.selectNoteForm = homeForm(m.notes)
+		m.editingNoteForm = nil
+		cmds = append(cmds, m.selectNoteForm.Init())
 	}
 
 	if m.currentState == "home" {
