@@ -21,6 +21,7 @@ require (
 	github.com/charmbracelet/charm v0.12.6 // indirect
 	github.com/charmbracelet/glamour v0.6.0 // indirect
 	github.com/charmbracelet/huh v0.2.3 // indirect
+	github.com/charmbracelet/huh/spinner v0.0.0-20240104183627-a92fbe913dd7 // indirect
 	github.com/charmbracelet/keygen v0.5.0 // indirect
 	github.com/charmbracelet/lipgloss v0.9.1 // indirect
 	github.com/charmbracelet/log v0.3.1 // indirect

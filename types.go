@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/charm/kv"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 )
 
 type Model struct {
@@ -18,6 +19,8 @@ type Model struct {
 	selectNoteForm  *huh.Form
 	createNoteForm  *huh.Form
 	editingNoteForm *huh.Form
+	getNotesSpinner *spinner.Spinner
+	saveNoteSpinner *spinner.Spinner
 }
 
 type Note struct {

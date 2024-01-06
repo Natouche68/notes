@@ -13,6 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/charm/kv"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"golang.org/x/term"
 )
 
@@ -138,4 +139,12 @@ func saveNote(m Model) tea.Cmd {
 
 		return NoteSavedMsg(m)
 	}
+}
+
+func getNotesSpinner() *spinner.Spinner {
+	return spinner.New().Title("Loading notes...")
+}
+
+func saveNoteSpinner() *spinner.Spinner {
+	return spinner.New().Title("Saving note...")
 }

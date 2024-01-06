@@ -7,11 +7,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 )
 
 func (m Model) Init() tea.Cmd {
-	return getNotes
+	return tea.Batch(m.getNotesSpinner.Init(), getNotes)
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -29,7 +30,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "esc":
-			cmds = append(cmds, saveNote(m))
+			m.saveNoteSpinner = saveNoteSpinner()
+			cmds = append(cmds, m.saveNoteSpinner.Init(), saveNote(m))
 		}
 
 	case ErrorMsg:
@@ -64,7 +66,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentState = "home"
 		m.selectNoteForm = homeForm(m.notes)
 		m.editingNoteForm = nil
+		m.saveNoteSpinner = nil
 		cmds = append(cmds, m.selectNoteForm.Init())
+	}
+
+	if m.getNotesSpinner != nil {
+		spinnerUpdated, cmd := m.getNotesSpinner.Update(msg)
+		if s, ok := spinnerUpdated.(*spinner.Spinner); ok {
+			m.getNotesSpinner = s
+		}
+
+		cmds = append(cmds, cmd)
+	} else if m.saveNoteSpinner != nil {
+		spinnerUpdated, cmd := m.saveNoteSpinner.Update(msg)
+		if s, ok := spinnerUpdated.(*spinner.Spinner); ok {
+			m.saveNoteSpinner = s
+		}
+
+		cmds = append(cmds, cmd)
 	}
 
 	if m.currentState == "home" {
@@ -119,6 +138,10 @@ func (m Model) View() string {
 		return errorStyle.Render(m.error.Error())
 	}
 
+	if m.getNotesSpinner != nil {
+		return m.getNotesSpinner.View()
+	}
+
 	if m.currentState == "home" {
 		title := titleStyle.Render("Notes")
 
@@ -127,8 +150,14 @@ func (m Model) View() string {
 		}
 	} else if m.currentState == "note" {
 		editingForm := m.editingNoteForm.View()
-		help := helpStyle.Render("crtl+c - quit • esc - go home")
-		s = lipgloss.JoinVertical(lipgloss.Left, editingForm, help)
+
+		if m.saveNoteSpinner != nil {
+			spinnerView := m.saveNoteSpinner.View()
+			s = lipgloss.JoinVertical(lipgloss.Left, editingForm, spinnerView)
+		} else {
+			help := helpStyle.Render("crtl+c - quit • esc - go home")
+			s = lipgloss.JoinVertical(lipgloss.Left, editingForm, help)
+		}
 	} else if m.currentState == "create" {
 		s = m.createNoteForm.View()
 	}
@@ -137,7 +166,9 @@ func (m Model) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(Model{}, tea.WithAltScreen())
+	p := tea.NewProgram(Model{
+		getNotesSpinner: getNotesSpinner(),
+	}, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println(errorStyle.Render("There was an error while instantiating the program : " + err.Error()))
 		os.Exit(1)
