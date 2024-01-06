@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/charm/kv"
 	"github.com/charmbracelet/huh"
@@ -39,7 +40,7 @@ func (note Note) MarshalJSON() ([]byte, error) {
 	return []byte(
 		fmt.Sprintf(
 			`{"title": "%s", "content": "%s", "lastEdited": %d}`,
-			note.title, note.content, note.lastEdited,
+			note.title, strings.ReplaceAll(note.content, "\n", "\\n"), note.lastEdited,
 		),
 	), nil
 }

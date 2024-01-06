@@ -6,6 +6,7 @@ import (
 	"os"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -70,6 +71,8 @@ func openNote(notes []Note, noteToOpen string) tea.Cmd {
 		openedNoteIndex := slices.IndexFunc(notes, func(note Note) bool {
 			return note.title == noteToOpen
 		})
+
+		notes[openedNoteIndex].content = strings.ReplaceAll(notes[openedNoteIndex].content, "\\n", "\n")
 
 		return OpenedNoteMsg(openedNoteIndex)
 	}
