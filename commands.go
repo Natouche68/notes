@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"slices"
@@ -9,9 +10,38 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/charm/kv"
 	"github.com/charmbracelet/huh"
 	"golang.org/x/term"
 )
+
+func getNotes() tea.Msg {
+	db, err := kv.OpenWithDefaults("notes-db")
+	if err != nil {
+		return ErrorMsg(err)
+	}
+
+	if err := db.Sync(); err != nil {
+		return ErrorMsg(err)
+	}
+
+	notesFromDb, err := db.Get([]byte("notes"))
+	if err != nil {
+		if err.Error() == "Key not found" {
+			notesFromDb = []byte("[]")
+		} else {
+			return ErrorMsg(err)
+		}
+	}
+
+	var notes []Note
+	error := json.Unmarshal(notesFromDb, &notes)
+	if error != nil {
+		return ErrorMsg(error)
+	}
+
+	return GetNotesMsg{notes, db}
+}
 
 func homeForm(notes []Note) *huh.Form {
 	sort.Slice(notes, func(i, j int) bool {
@@ -93,6 +123,16 @@ func initNoteForm(m Model) tea.Cmd {
 func saveNote(m Model) tea.Cmd {
 	return func() tea.Msg {
 		m.notes[m.currentNote].lastEdited = time.Now().Unix()
+
+		jsonNotes, err := json.Marshal(m.notes)
+		if err != nil {
+			return ErrorMsg(err)
+		}
+
+		if err := m.db.Set([]byte("notes"), jsonNotes); err != nil {
+			return ErrorMsg(err)
+		}
+
 		return NoteSavedMsg(m)
 	}
 }

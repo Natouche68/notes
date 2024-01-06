@@ -10,29 +10,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func newModel() Model {
-	notes := []Note{
-		{
-			title:      "Note 1",
-			content:    "This is the content of note 1",
-			lastEdited: time.Now().Unix(),
-		},
-		{
-			title:      "Note 2",
-			content:    "This is the content of note 2",
-			lastEdited: time.Now().Unix(),
-		},
-	}
-
-	return Model{
-		notes:          notes,
-		currentState:   "home",
-		selectNoteForm: homeForm(notes),
-	}
-}
-
 func (m Model) Init() tea.Cmd {
-	return m.selectNoteForm.Init()
+	return getNotes
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -52,6 +31,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc":
 			cmds = append(cmds, saveNote(m))
 		}
+
+	case ErrorMsg:
+		m.error = msg
+
+	case GetNotesMsg:
+		m = Model{
+			notes:          msg.notes,
+			currentState:   "home",
+			selectNoteForm: homeForm(msg.notes),
+			db:             msg.db,
+		}
+		cmds = append(cmds, m.selectNoteForm.Init())
 
 	case OpenedNoteMsg:
 		m.currentNote = int(msg)
@@ -124,6 +115,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	s := ""
 
+	if m.error != nil {
+		return errorStyle.Render(m.error.Error())
+	}
+
 	if m.currentState == "home" {
 		title := titleStyle.Render("Notes")
 
@@ -142,7 +137,7 @@ func (m Model) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(newModel(), tea.WithAltScreen())
+	p := tea.NewProgram(Model{}, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Println(errorStyle.Render("There was an error while instantiating the program : " + err.Error()))
 		os.Exit(1)
