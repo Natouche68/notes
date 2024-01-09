@@ -142,9 +142,17 @@ func saveNote(m Model) tea.Cmd {
 }
 
 func getNotesSpinner() *spinner.Spinner {
-	return spinner.New().Title("Loading notes...")
+	return spinner.New().
+		Title("Loading notes...").
+		Type(spinner.Points).
+		Style(spinnerStyle).
+		TitleStyle(spinnerTitleStyle)
 }
 
 func saveNoteSpinner() *spinner.Spinner {
-	return spinner.New().Title("Saving note...")
+	return spinner.New().
+		Title("Saving note...").
+		Type(spinner.Points).
+		Style(spinnerStyle).
+		TitleStyle(spinnerTitleStyle)
 }
