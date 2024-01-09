@@ -114,13 +114,28 @@ func initNoteForm(m Model) tea.Cmd {
 					Title(m.notes[m.currentNote].title).
 					Value(&m.notes[m.currentNote].content).
 					Lines(height - 6).
-					CharLimit(3200),
+					CharLimit(3200).
+					WithTheme(&huh.Theme{
+						Focused: huh.FieldStyles{
+							Title: titleStyle,
+						},
+					}),
 			),
-		).WithShowHelp(false).WithTheme(huh.ThemeBase16()).WithKeyMap(&huh.KeyMap{
-			Text: huh.TextKeyMap{
-				NewLine: key.NewBinding(key.WithKeys("enter")),
-			},
-		}).WithWidth(width - 1))
+		).
+			WithShowHelp(false).
+			WithTheme(huh.ThemeBase16()).
+			WithKeyMap(&huh.KeyMap{
+				Text: huh.TextKeyMap{
+					NewLine: key.NewBinding(key.WithKeys("enter")),
+				},
+			}).
+			WithWidth(width - 1).
+			WithTheme(&huh.Theme{
+				Focused: huh.FieldStyles{
+					Title: titleStyle,
+				},
+			}),
+		)
 	}
 }
 
