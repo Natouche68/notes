@@ -14,6 +14,8 @@ type Model struct {
 	notes           []Note
 	currentState    string
 	currentNote     int
+	isSaving        bool
+	isQuitting      bool
 	db              *kv.KV
 	error           error
 	selectNoteForm  *huh.Form

@@ -18,20 +18,32 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 
+	if m.isSaving {
+		m.isSaving = false
+		cmds = append(cmds, saveNote(m))
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			return m, tea.Quit
+			if m.currentState == "note" {
+				m.saveNoteSpinner = saveNoteSpinner()
+				m.isQuitting = true
+				cmds = append(cmds, m.saveNoteSpinner.Init(), saveNote(m))
+			} else {
+				return m, quit(m)
+			}
 
 		case "q":
 			if m.currentState == "home" {
-				return m, tea.Quit
+				return m, quit(m)
 			}
 
 		case "esc":
 			m.saveNoteSpinner = saveNoteSpinner()
-			cmds = append(cmds, m.saveNoteSpinner.Init(), saveNote(m))
+			m.isSaving = true
+			cmds = append(cmds, m.saveNoteSpinner.Init())
 		}
 
 	case ErrorMsg:
@@ -43,6 +55,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			currentState:   "home",
 			selectNoteForm: homeForm(msg.notes),
 			db:             msg.db,
+			isSaving:       false,
+			isQuitting:     false,
 		}
 		cmds = append(cmds, m.selectNoteForm.Init())
 
@@ -68,6 +82,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.editingNoteForm = nil
 		m.saveNoteSpinner = nil
 		cmds = append(cmds, m.selectNoteForm.Init())
+		if m.isQuitting {
+			cmds = append(cmds, quit(m))
+		}
 	}
 
 	if m.getNotesSpinner != nil {

@@ -140,19 +140,32 @@ func initNoteForm(m Model) tea.Cmd {
 }
 
 func saveNote(m Model) tea.Cmd {
-	return func() tea.Msg {
-		m.notes[m.currentNote].lastEdited = time.Now().Unix()
+	var error error
 
-		jsonNotes, err := json.Marshal(m.notes)
-		if err != nil {
-			return ErrorMsg(err)
-		}
+	m.notes[m.currentNote].lastEdited = time.Now().Unix()
 
+	jsonNotes, err := json.Marshal(m.notes)
+	if err != nil {
+		error = err
+	}
+	if m.isQuitting {
 		if err := m.db.Set([]byte("notes"), jsonNotes); err != nil {
-			return ErrorMsg(err)
+			error = err
+		}
+	}
+
+	return func() tea.Msg {
+		if !m.isQuitting {
+			if err := m.db.Set([]byte("notes"), jsonNotes); err != nil {
+				error = err
+			}
 		}
 
-		return NoteSavedMsg(m)
+		if error != nil {
+			return ErrorMsg(error)
+		} else {
+			return NoteSavedMsg(m)
+		}
 	}
 }
 
@@ -170,4 +183,10 @@ func saveNoteSpinner() *spinner.Spinner {
 		Type(spinner.Points).
 		Style(spinnerStyle).
 		TitleStyle(spinnerTitleStyle)
+}
+
+func quit(m Model) tea.Cmd {
+	m.db.Close()
+
+	return tea.Quit
 }
