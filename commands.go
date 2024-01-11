@@ -56,6 +56,7 @@ func homeForm(notes []Note) *huh.Form {
 	for _, note := range notes {
 		notesTitles = append(notesTitles, note.title)
 	}
+	notesTitles = append(notesTitles, "Delete a note")
 
 	return huh.NewForm(
 		huh.NewGroup(
@@ -189,4 +190,49 @@ func quit(m Model) tea.Cmd {
 	m.db.Close()
 
 	return tea.Quit
+}
+
+func deleteNoteForm(notes []Note) *huh.Form {
+	notesTitle := []string{}
+	for _, note := range notes {
+		notesTitle = append(notesTitle, note.title)
+	}
+
+	return huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Key("noteToDelete").
+				Title("Select a note to delete").
+				Options(huh.NewOptions(notesTitle...)...),
+		),
+	).WithShowHelp(false).WithTheme(huh.ThemeBase16())
+}
+
+func deleteNote(notes []Note, noteToDelete string) tea.Cmd {
+	return func() tea.Msg {
+		return NoteDeletedMsg(slices.DeleteFunc(notes, func(note Note) bool {
+			return note.title == noteToDelete
+		}))
+	}
+}
+
+func saveAfterDeletion(m Model) tea.Cmd {
+	var error error
+
+	jsonNotes, err := json.Marshal(m.notes)
+	if err != nil {
+		error = err
+	}
+
+	return func() tea.Msg {
+		if err := m.db.Set([]byte("notes"), jsonNotes); err != nil {
+			error = err
+		}
+
+		if error != nil {
+			return ErrorMsg(error)
+		} else {
+			return NoteSavedAfterDeletionMsg(m)
+		}
+	}
 }

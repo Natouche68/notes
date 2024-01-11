@@ -85,6 +85,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.isQuitting {
 			cmds = append(cmds, quit(m))
 		}
+
+	case NoteDeletedMsg:
+		m.notes = msg
+		m.currentState = "home"
+		m.selectNoteForm = homeForm(m.notes)
+		m.deleteNoteForm = nil
+		cmds = append(cmds, m.selectNoteForm.Init(), saveAfterDeletion(m))
 	}
 
 	if m.getNotesSpinner != nil {
@@ -114,6 +121,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.selectNoteForm.State == huh.StateCompleted {
 			if m.selectNoteForm.GetString("note") == "Create a new note" {
 				cmds = append(cmds, createNote(m.notes))
+			} else if m.selectNoteForm.GetString("note") == "Delete a note" {
+				m.currentState = "delete"
+				m.selectNoteForm = nil
+				m.deleteNoteForm = deleteNoteForm(m.notes)
+				cmds = append(cmds, m.deleteNoteForm.Init())
 			} else {
 				cmds = append(cmds, openNote(m.notes, m.selectNoteForm.GetString("note")))
 			}
@@ -128,7 +140,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	} else if m.currentState == "create" {
 		form, cmd := m.createNoteForm.Update(msg)
 		if f, ok := form.(*huh.Form); ok {
-			m.selectNoteForm = f
+			m.createNoteForm = f
 		}
 
 		cmds = append(cmds, cmd)
@@ -142,6 +154,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 
 			cmds = append(cmds, initNoteForm(m))
+		}
+	} else if m.currentState == "delete" {
+		form, cmd := m.deleteNoteForm.Update(msg)
+		if f, ok := form.(*huh.Form); ok {
+			m.deleteNoteForm = f
+		}
+
+		cmds = append(cmds, cmd)
+
+		if m.deleteNoteForm.State == huh.StateCompleted {
+			cmds = append(cmds, deleteNote(m.notes, m.deleteNoteForm.GetString("noteToDelete")))
 		}
 	}
 
@@ -177,6 +200,8 @@ func (m Model) View() string {
 		}
 	} else if m.currentState == "create" {
 		s = m.createNoteForm.View()
+	} else if m.currentState == "delete" {
+		s = m.deleteNoteForm.View()
 	}
 
 	return s

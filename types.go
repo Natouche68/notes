@@ -21,6 +21,7 @@ type Model struct {
 	selectNoteForm  *huh.Form
 	createNoteForm  *huh.Form
 	editingNoteForm *huh.Form
+	deleteNoteForm  *huh.Form
 	getNotesSpinner *spinner.Spinner
 	saveNoteSpinner *spinner.Spinner
 }
@@ -40,6 +41,8 @@ type OpenedNoteMsg int
 type CreatingFormMsg *huh.Form
 type EditingFormMsg *huh.Form
 type NoteSavedMsg Model
+type NoteDeletedMsg []Note
+type NoteSavedAfterDeletionMsg Model
 
 func (note Note) MarshalJSON() ([]byte, error) {
 	return []byte(
